@@ -1,0 +1,22 @@
+PODS:
+  - FlutterMacOS (1.0.0)
+  - shadow_notification (0.0.1):
+    - FlutterMacOS
+
+DEPENDENCIES:
+  - FlutterMacOS (from `Flutter/ephemeral`)
+  - shadow_notification (from `Flutter/ephemeral/.symlinks/plugins/shadow_notification/macos`)
+
+EXTERNAL SOURCES:
+  FlutterMacOS:
+    :path: Flutter/ephemeral
+  shadow_notification:
+    :path: Flutter/ephemeral/.symlinks/plugins/shadow_notification/macos
+
+SPEC CHECKSUMS:
+  FlutterMacOS: 8f6f14fa908a6fb3fba0cd85dbd81ec4b251fb24
+  shadow_notification: 865c279dd2a038344e270926faf2dee2ad44b8bd
+
+PODFILE CHECKSUM: 1d593e10997511ead9744d7facbd4de87509a5f0
+
+COCOAPODS: 1.16.2
