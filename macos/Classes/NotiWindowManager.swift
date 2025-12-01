@@ -87,10 +87,11 @@ final class NotiWindowManager {
     func showNotification(
         title: String,
         subtitle: String,
+        secondarySubtitle: String? = nil,
         duration: TimeInterval,
         actionButton: (text: String, action: () -> Void)? = nil,
         onTimeout: (() -> Void)? = nil,
-        width: CGFloat = 350,
+        width: CGFloat = 360,
         height: CGFloat = 75,
         showCountdown: Bool = false
     ) {
@@ -137,6 +138,7 @@ final class NotiWindowManager {
             config = .withButton(
                 title: title,
                 subtitle: subtitle,
+                secondarySubtitle: secondarySubtitle,
                 duration: duration,
                 buttonText: button.text,
                 buttonAction: button.action,
@@ -146,6 +148,7 @@ final class NotiWindowManager {
             config = .withoutButton(
                 title: title,
                 subtitle: subtitle,
+                secondarySubtitle: secondarySubtitle,
                 duration: duration,
                 showCountdown: showCountdown
             )
@@ -214,22 +217,27 @@ final class NotiWindowManager {
         )
     }
 
-    func showAutoWindowFailedNoti(duration: TimeInterval = 5.0) {
+    func showAutoWindowFailedNoti(duration: TimeInterval = 10.0) {
         showNotification(
             title: "Select a window to capture",
             subtitle: "I couldn't auto-select the meeting window.",
+            secondarySubtitle: "* This message is not visible to others.",
             duration: duration,
             actionButton: nil,
-            width: 380
+            width: 390,
+            height: 110
         )
     }
 
-    func showMeetingWindowNotFoundNoti(duration: TimeInterval = 5.0) {
+    func showMeetingWindowNotFoundNoti(duration: TimeInterval = 10.0) {
         showNotification(
             title: "Select a window to capture",
             subtitle: "The meeting window isn't visible anymore.",
+            secondarySubtitle: "* This message is not visible to others.",
             duration: duration,
-            actionButton: nil
+            actionButton: nil,
+            width: 390,
+            height: 110
         )
     }
 
@@ -329,10 +337,12 @@ final class NotiWindowManager {
         window.isOpaque = false
         window.backgroundColor = .clear
         window.hasShadow = false
-        window.level = .floating
+        window.level = .screenSaver
         window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
         window.ignoresMouseEvents = false
         window.isReleasedWhenClosed = false
+        
+        window.sharingType = .none
 
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden

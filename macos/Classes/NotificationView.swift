@@ -5,6 +5,7 @@ struct NotificationView: View {
     struct Config {
         let title: String
         let subtitle: String
+        let secondarySubtitle: String?
         let duration: TimeInterval
         let actionButton: ActionButton?
         let showCountdown: Bool
@@ -18,6 +19,7 @@ struct NotificationView: View {
         static func withButton(
             title: String,
             subtitle: String,
+            secondarySubtitle: String? = nil,
             duration: TimeInterval,
             buttonText: String,
             buttonAction: @escaping () -> Void,
@@ -26,6 +28,7 @@ struct NotificationView: View {
             Config(
                 title: title,
                 subtitle: subtitle,
+                secondarySubtitle: secondarySubtitle,
                 duration: duration,
                 actionButton: .init(text: buttonText, action: buttonAction),
                 showCountdown: showCountdown
@@ -35,12 +38,14 @@ struct NotificationView: View {
         static func withoutButton(
             title: String,
             subtitle: String,
+            secondarySubtitle: String? = nil,
             duration: TimeInterval,
             showCountdown: Bool = false
         ) -> Config {
             Config(
                 title: title,
                 subtitle: subtitle,
+                secondarySubtitle: secondarySubtitle,
                 duration: duration,
                 actionButton: nil,
                 showCountdown: showCountdown
@@ -105,6 +110,13 @@ struct NotificationView: View {
                                 .font(.system(size: 12.5, weight: .light))
                                 .foregroundColor(Color.text2)
                         }
+                        
+                        if let secondary = config.secondarySubtitle {
+                                Text(secondary)
+                                    .font(.system(size: 12.5, weight: .bold))
+                                    .foregroundColor(Color.text2)
+                                    .padding(.top, 2)
+                            }
                     }
 
                     Spacer(minLength: 10)
