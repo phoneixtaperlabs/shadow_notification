@@ -110,9 +110,9 @@ final class NotiWindowManager {
         let xPos = screenFrame.maxX - windowWidth - 10
         let yPos = screenFrame.maxY - windowHeight - 20
 
-        let customNotiWindow = NSWindow(
+        let customNotiWindow = NSPanel(
             contentRect: NSRect(x: xPos, y: yPos, width: width, height: height),
-            styleMask: [.borderless, .fullSizeContentView],
+            styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
@@ -167,7 +167,8 @@ final class NotiWindowManager {
 
         notiWindowController?.setupAutoClose(after: duration)
 
-        customNotiWindow.makeKeyAndOrderFront(nil)
+//        customNotiWindow.makeKeyAndOrderFront(nil)
+//        customNotiWindow.orderFront(nil)
         customNotiWindow.orderFrontRegardless()
     }
 
@@ -262,7 +263,7 @@ final class NotiWindowManager {
         
         let customNotiWindow = NSWindow(
             contentRect: NSRect(x: xPos, y: yPos, width: width, height: height),
-            styleMask: [.borderless, .fullSizeContentView],
+            styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
