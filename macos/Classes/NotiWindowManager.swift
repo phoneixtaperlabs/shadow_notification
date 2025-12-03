@@ -2,6 +2,28 @@ import Foundation
 import CoreGraphics
 import SwiftUI
 
+// MARK: - Animation Types
+enum WindowAnimationType {
+    case slideInFromRight
+    case slideInFromTop
+    case fadeIn
+    case none
+    
+    var duration: TimeInterval {
+        switch self {
+        case .slideInFromRight, .slideInFromTop: return 0.3
+        case .fadeIn: return 0.25
+        case .none: return 0
+        }
+    }
+}
+
+// MARK: - Window Animator Protocol
+protocol WindowAnimatable {
+    func showWithAnimation(_ type: WindowAnimationType, to targetFrame: NSRect)
+    func hideWithAnimation(_ type: WindowAnimationType, completion: (() -> Void)?)
+}
+
 enum NotiType {
     case enabled // 'Cancel' 버튼이 있는 경우
     case ask     // 'Listen' 버튼이 있는 경우
@@ -93,7 +115,8 @@ final class NotiWindowManager {
         onTimeout: (() -> Void)? = nil,
         width: CGFloat = 360,
         height: CGFloat = 75,
-        showCountdown: Bool = false
+        showCountdown: Bool = false,
+        animation: WindowAnimationType = .slideInFromRight
     ) {
         // Close existing notification
         if let existingController = notiWindowController {
@@ -109,9 +132,10 @@ final class NotiWindowManager {
 
         let xPos = screenFrame.maxX - windowWidth - 10
         let yPos = screenFrame.maxY - windowHeight - 20
+        let targetFrame = NSRect(x: xPos, y: yPos, width: width, height: height)
 
         let customNotiWindow = NSPanel(
-            contentRect: NSRect(x: xPos, y: yPos, width: width, height: height),
+            contentRect: targetFrame,
             styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
@@ -169,7 +193,8 @@ final class NotiWindowManager {
 
 //        customNotiWindow.makeKeyAndOrderFront(nil)
 //        customNotiWindow.orderFront(nil)
-        customNotiWindow.orderFrontRegardless()
+//        customNotiWindow.orderFrontRegardless()
+        customNotiWindow.showWithAnimation(animation, to: targetFrame)
     }
 
     // MARK: - Convenience Notification Methods
@@ -363,5 +388,96 @@ final class NotiWindowManager {
         }
         notiWindowController = nil
         print("Custom Notification cleanup complete")
+    }
+}
+
+
+extension NSWindow: WindowAnimatable {
+    
+    func showWithAnimation(_ type: WindowAnimationType, to targetFrame: NSRect) {
+        switch type {
+        case .slideInFromRight:
+            // 화면 오른쪽 밖에서 시작
+            let startFrame = NSRect(
+                x: targetFrame.maxX + 50,  // 오른쪽 밖
+                y: targetFrame.origin.y,
+                width: targetFrame.width,
+                height: targetFrame.height
+            )
+            animateFrame(from: startFrame, to: targetFrame, duration: type.duration)
+            
+        case .slideInFromTop:
+            // 화면 위에서 시작
+            let startFrame = NSRect(
+                x: targetFrame.origin.x,
+                y: targetFrame.maxY + 50,  // 위쪽 밖
+                width: targetFrame.width,
+                height: targetFrame.height
+            )
+            animateFrame(from: startFrame, to: targetFrame, duration: type.duration)
+            
+        case .fadeIn:
+            self.setFrame(targetFrame, display: true)
+            self.alphaValue = 0
+            self.orderFrontRegardless()
+            NSAnimationContext.runAnimationGroup { context in
+                context.duration = type.duration
+                context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+                self.animator().alphaValue = 1
+            }
+            
+        case .none:
+            self.setFrame(targetFrame, display: true)
+            self.orderFrontRegardless()
+        }
+    }
+    
+    func hideWithAnimation(_ type: WindowAnimationType, completion: (() -> Void)? = nil) {
+        let currentFrame = self.frame
+        
+        NSAnimationContext.runAnimationGroup({ context in
+            context.duration = type.duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeIn)
+            
+            switch type {
+            case .slideInFromRight:
+                let endFrame = NSRect(
+                    x: currentFrame.maxX + 50,
+                    y: currentFrame.origin.y,
+                    width: currentFrame.width,
+                    height: currentFrame.height
+                )
+                self.animator().setFrame(endFrame, display: true)
+                
+            case .slideInFromTop:
+                let endFrame = NSRect(
+                    x: currentFrame.origin.x,
+                    y: currentFrame.maxY + 50,
+                    width: currentFrame.width,
+                    height: currentFrame.height
+                )
+                self.animator().setFrame(endFrame, display: true)
+                
+            case .fadeIn:
+                self.animator().alphaValue = 0
+                
+            case .none:
+                break
+            }
+        }, completionHandler: {
+            completion?()
+        })
+    }
+    
+    // MARK: - Private Helper
+    private func animateFrame(from startFrame: NSRect, to endFrame: NSRect, duration: TimeInterval) {
+        self.setFrame(startFrame, display: true)
+        self.orderFrontRegardless()
+        
+        NSAnimationContext.runAnimationGroup { context in
+            context.duration = duration
+            context.timingFunction = CAMediaTimingFunction(name: .easeOut)
+            self.animator().setFrame(endFrame, display: true)
+        }
     }
 }
