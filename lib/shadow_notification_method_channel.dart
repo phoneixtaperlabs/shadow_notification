@@ -29,6 +29,11 @@ class MethodChannelShadowNotification extends ShadowNotificationPlatform {
     await methodChannel.invokeMethod('showMeetingWindowNotFoundNotification');
   }
 
+  @override
+  Future<void> showUpcomingEventNoti(Map<String, dynamic>? params) async {
+    await methodChannel.invokeMethod('showUpcomingEventNoti', params);
+  }
+
   // 새로 추가: Swift에서 오는 호출을 받기 위한 메서드
   @override
   void setNativeCallHandler(Future<dynamic> Function(MethodCall call)? handler) {

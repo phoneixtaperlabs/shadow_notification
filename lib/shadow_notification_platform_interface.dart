@@ -40,6 +40,10 @@ abstract class ShadowNotificationPlatform extends PlatformInterface {
     throw UnimplementedError('showMeetingWindowNotFoundNotification() has not been implemented.');
   }
 
+  Future<void> showUpcomingEventNoti(Map<String, dynamic>? params) async {
+    throw UnimplementedError('showUpcomingEventNoti() has not been implemented.');
+  }
+
   void setNativeCallHandler(Future<dynamic> Function(MethodCall call)? handler) {
     throw UnimplementedError('setNativeCallHandler() has not been implemented.');
   }

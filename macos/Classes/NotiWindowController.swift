@@ -4,27 +4,29 @@ import CoreGraphics
 
 @MainActor
 final class NotiWindowController: NSWindowController, NSWindowDelegate {
-    
+
+    let notificationId: UUID
     private let notiType: NotiType
     private var actionTaken: Bool = false
-    
+
     // 1. private optional property to hold the logger instance
     private var logger: ShadowNotiLogger?
-    
+
     private var autoCloseTask: Task<Void, Never>?
-    
-    // 창이 닫힐 때, 자신의 타입과 액션 수행 여부를 알려주도록 변경
-    private var onCloseCallback: ((NotiType, Bool) -> Void)?
-    
-    init(notiWindow: NSWindow, type: NotiType, onClose: @escaping (NotiType, Bool) -> Void) {
+
+    // 창이 닫힐 때, UUID, 타입, 액션 수행 여부를 알려주도록 변경
+    private var onCloseCallback: ((UUID, NotiType, Bool) -> Void)?
+
+    init(notificationId: UUID = UUID(), notiWindow: NSWindow, type: NotiType, onClose: @escaping (UUID, NotiType, Bool) -> Void) {
+        self.notificationId = notificationId
         self.notiType = type
         self.onCloseCallback = onClose
         super.init(window: notiWindow)
         notiWindow.delegate = self
         notiWindow.isReleasedWhenClosed = false
-        
+
         self.logger = ShadowNotiLogger.shared
-        self.logger?.info("NotiWindowController initialized")
+        self.logger?.info("NotiWindowController initialized with id: \(notificationId)")
     }
     
     deinit {
@@ -76,11 +78,11 @@ final class NotiWindowController: NSWindowController, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         // 3. Reuse the logger instance
-        logger?.info("Window will close - cleaning up in controller.")
-        
+        logger?.info("Window will close - cleaning up in controller. id: \(notificationId)")
+
         autoCloseTask?.cancel()
         autoCloseTask = nil
-        onCloseCallback?(self.notiType, self.actionTaken)
+        onCloseCallback?(self.notificationId, self.notiType, self.actionTaken)
         onCloseCallback = nil
         self.window = nil
     }

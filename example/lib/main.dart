@@ -195,6 +195,40 @@ class _MyAppState extends State<MyApp> {
                   },
                   child: const Text('Test Meeting Window Not Found'),
                 ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _shadowNotificationPlugin.showUpcomingEventNoti({
+                        'title': 'Team Meeting',
+                        'subtitle': 'Starting in 5 minutes',
+                        'hasListenButton': true,
+                        'duration': 10.0,
+                      });
+                      print('Upcoming event notification (with button) shown');
+                    } catch (e) {
+                      print('Error showing upcoming event notification: $e');
+                    }
+                  },
+                  child: const Text('Test Upcoming Event (with Listen)'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _shadowNotificationPlugin.showUpcomingEventNoti({
+                        'title': 'Lunch Break',
+                        'subtitle': 'Starting in 10 minutes',
+                        'hasListenButton': false,
+                        'duration': 5.0,
+                      });
+                      print('Upcoming event notification (no button) shown');
+                    } catch (e) {
+                      print('Error showing upcoming event notification: $e');
+                    }
+                  },
+                  child: const Text('Test Upcoming Event (no button)'),
+                ),
               ],
             ),
           ),

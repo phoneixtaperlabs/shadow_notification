@@ -23,6 +23,10 @@ class ShadowNotification {
     await ShadowNotificationPlatform.instance.showMeetingWindowNotFoundNotification();
   }
 
+  Future<void> showUpcomingEventNoti(Map<String, dynamic>? params) async {
+    await ShadowNotificationPlatform.instance.showUpcomingEventNoti(params);
+  }
+
   void setNativeCallHandler(Future<dynamic> Function(MethodCall call)? handler) {
     ShadowNotificationPlatform.instance.setNativeCallHandler(handler);
   }

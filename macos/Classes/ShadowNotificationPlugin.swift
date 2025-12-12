@@ -54,6 +54,15 @@ public class ShadowNotificationPlugin: NSObject, FlutterPlugin {
                 NotiWindowManager.shared.showMeetingWindowNotFoundNoti()
                 result(nil)
             }
+        case "showUpcomingEventNoti":
+            Task { @MainActor in
+                if let args = call.arguments as? [String: Any] {
+                    NotiWindowManager.shared.showUpcomingEventNoti(params: args)
+                } else {
+                    NotiWindowManager.shared.showUpcomingEventNoti(params: nil)
+                }
+                result(nil)
+            }
         case "getPlatformVersion":
             result("macOS " + ProcessInfo.processInfo.operatingSystemVersionString)
         default:
