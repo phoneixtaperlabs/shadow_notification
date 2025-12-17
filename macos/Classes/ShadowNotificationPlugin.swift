@@ -44,6 +44,11 @@ public class ShadowNotificationPlugin: NSObject, FlutterPlugin {
                 NotiWindowManager.shared.showAskNoti()
                 result(nil)
             }
+        case "showGoogleMeetWindowFailedNotification":
+            Task { @MainActor in
+                NotiWindowManager.shared.showGoogleMeetWindowFailedNoti()
+                result(nil)
+            }
         case "showAutoWindowFailedNotification":
             Task { @MainActor in
                 NotiWindowManager.shared.showAutoWindowFailedNoti()
@@ -60,6 +65,15 @@ public class ShadowNotificationPlugin: NSObject, FlutterPlugin {
                     NotiWindowManager.shared.showUpcomingEventNoti(params: args)
                 } else {
                     NotiWindowManager.shared.showUpcomingEventNoti(params: nil)
+                }
+                result(nil)
+            }
+        case "showInactiveNoti":
+            Task { @MainActor in
+                if let args = call.arguments as? [String: Any] {
+                    NotiWindowManager.shared.showInactiveNoti(params: args)
+                } else {
+                    NotiWindowManager.shared.showInactiveNoti(params: nil)
                 }
                 result(nil)
             }
@@ -102,6 +116,10 @@ public class ShadowNotificationPlugin: NSObject, FlutterPlugin {
 extension ShadowNotificationPlugin {
     // Swift → Flutter 호출을 위한 헬퍼 메서드
     static func sendToFlutter(_ method: ListenAction, data: Any? = nil) {
+        methodChannel?.invokeMethod(method.rawValue, arguments: data)
+    }
+
+    static func sendToFlutter(_ method: InactiveAction, data: Any? = nil) {
         methodChannel?.invokeMethod(method.rawValue, arguments: data)
     }
 }

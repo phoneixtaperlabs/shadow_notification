@@ -32,6 +32,10 @@ abstract class ShadowNotificationPlatform extends PlatformInterface {
     throw UnimplementedError('showAskNotification() has not been implemented.');
   }
 
+  Future<void> showGoogleMeetWindowFailedNotification() async {
+    throw UnimplementedError('showGoogleMeetWindowFailedNotification() has not been implemented.');
+  }
+
   Future<void> showAutoWindowFailedNotification() async {
     throw UnimplementedError('showAutoWindowFailedNotification() has not been implemented.');
   }
@@ -42,6 +46,10 @@ abstract class ShadowNotificationPlatform extends PlatformInterface {
 
   Future<void> showUpcomingEventNoti(Map<String, dynamic>? params) async {
     throw UnimplementedError('showUpcomingEventNoti() has not been implemented.');
+  }
+
+  Future<void> showInactiveNoti(Map<String, dynamic>? params) async {
+    throw UnimplementedError('showInactiveNoti() has not been implemented.');
   }
 
   void setNativeCallHandler(Future<dynamic> Function(MethodCall call)? handler) {

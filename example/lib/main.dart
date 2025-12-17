@@ -3,15 +3,18 @@ import 'dart:async';
 
 import 'package:flutter/services.dart';
 import 'package:shadow_notification/shadow_notification.dart';
+import 'package:shadow_notification/shadow_notification_platform_interface.dart';
 
 void main() {
   runApp(const MyApp());
 }
 
 // ### [Swift --> Flutter MethodChannel]
-enum NativeMethod { startListen, dismissListen }
+enum NativeMethod { startListen, dismissListen, inactiveCancelled, inactiveTimeout }
 
 enum ListenAction { startListen, dismissListen }
+
+enum InactiveAction { inactiveCancelled, inactiveTimeout }
 
 enum ActionTrigger { userAction, timeout }
 
@@ -36,6 +39,28 @@ class ListenStatePayload {
       return ListenStatePayload(action: action, trigger: trigger);
     } catch (e) {
       // Swift에서 보낸 문자열이 Enum에 정의되지 않은 경우 예외 발생
+      throw FormatException("Invalid enum value provided: $e");
+    }
+  }
+}
+
+class InactiveStatePayload {
+  final InactiveAction action;
+  final ActionTrigger trigger;
+
+  InactiveStatePayload({required this.action, required this.trigger});
+
+  factory InactiveStatePayload.fromJson(Map<String, dynamic> json) {
+    if (json['action'] == null || json['trigger'] == null) {
+      throw FormatException("Missing required keys: action or trigger");
+    }
+
+    try {
+      final action = InactiveAction.values.byName(json['action']);
+      final trigger = ActionTrigger.values.byName(json['trigger']);
+
+      return InactiveStatePayload(action: action, trigger: trigger);
+    } catch (e) {
       throw FormatException("Invalid enum value provided: $e");
     }
   }
@@ -86,27 +111,33 @@ class _MyAppState extends State<MyApp> {
       return;
     }
 
-    final ListenStatePayload payload;
-    try {
-      final Map<String, dynamic> eventMap = Map<String, dynamic>.from(call.arguments);
-      print("Parsed eventMap: $eventMap, type: ${eventMap.runtimeType}");
-      payload = ListenStatePayload.fromJson(eventMap);
-      print("Action: ${payload.action}, Trigger: ${payload.trigger}");
-    } catch (e) {
-      print("네이티브 이벤트 처리 중 에러 발생: $e");
-      return;
-    }
+    final Map<String, dynamic> eventMap = Map<String, dynamic>.from(call.arguments);
+    print("Parsed eventMap: $eventMap, type: ${eventMap.runtimeType}");
 
     switch (method) {
       case NativeMethod.startListen:
-        setState(() {
-          _platformVersion = 'Native Event: ${payload.action}, ${payload.trigger}';
-        });
-        break;
       case NativeMethod.dismissListen:
-        setState(() {
-          _platformVersion = 'Native Event: ${payload.action}, ${payload.trigger}';
-        });
+        try {
+          final payload = ListenStatePayload.fromJson(eventMap);
+          print("Action: ${payload.action}, Trigger: ${payload.trigger}");
+          setState(() {
+            _platformVersion = 'Listen Event: ${payload.action}, ${payload.trigger}';
+          });
+        } catch (e) {
+          print("Listen 이벤트 처리 중 에러 발생: $e");
+        }
+        break;
+      case NativeMethod.inactiveCancelled:
+      case NativeMethod.inactiveTimeout:
+        try {
+          final payload = InactiveStatePayload.fromJson(eventMap);
+          print("Action: ${payload.action}, Trigger: ${payload.trigger}");
+          setState(() {
+            _platformVersion = 'Inactive Event: ${payload.action}, ${payload.trigger}';
+          });
+        } catch (e) {
+          print("Inactive 이벤트 처리 중 에러 발생: $e");
+        }
         break;
     }
   }
@@ -143,10 +174,7 @@ class _MyAppState extends State<MyApp> {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  'Running on: $_platformVersion\n',
-                  textAlign: TextAlign.center,
-                ),
+                Text('Running on: $_platformVersion\n', textAlign: TextAlign.center),
                 const SizedBox(height: 40),
                 ElevatedButton(
                   onPressed: () async {
@@ -175,13 +203,13 @@ class _MyAppState extends State<MyApp> {
                 ElevatedButton(
                   onPressed: () async {
                     try {
-                      await _shadowNotificationPlugin.showAutoWindowFailedNotification();
-                      print('Auto window failed notification shown');
+                      await _shadowNotificationPlugin.showGoogleMeetWindowFailedNotification();
+                      print('Google Meet window failed notification shown');
                     } catch (e) {
-                      print('Error showing auto window failed notification: $e');
+                      print('Error showing Google Meet window failed notification: $e');
                     }
                   },
-                  child: const Text('Test Auto Window Failed'),
+                  child: const Text('Test Google Meet Window Failed'),
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
@@ -228,6 +256,43 @@ class _MyAppState extends State<MyApp> {
                     }
                   },
                   child: const Text('Test Upcoming Event (no button)'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _shadowNotificationPlugin.showInactiveNoti({
+                        'title': 'Session Inactive',
+                        'subtitle': 'short break?',
+                        // 'subtitle': "I haven't heard anything for 10 minutes. Are you still in a meeting?",
+                        'hasButton': true,
+                        'duration': 10.0,
+                      });
+                      print('Inactive notification (with button) shown');
+                    } catch (e) {
+                      print('Error showing inactive notification: $e');
+                    }
+                  },
+                  child: const Text('Test Inactive (with Cancel)'),
+                ),
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      await _shadowNotificationPlugin.showInactiveNoti(null);
+                      // await _shadowNotificationPlugin.showInactiveNoti({
+                      //   'title': 'Session Inactive',
+                      //   'subtitle': 'short break?',
+                      //   // 'subtitle': "Looks like the meeting's over. I'll stop recording in 10 seconds.",
+                      //   // 'hasButton': false,
+                      //   'duration': 10.0,
+                      // });
+                      print('Inactive notification (no button) shown');
+                    } catch (e) {
+                      print('Error showing inactive notification: $e');
+                    }
+                  },
+                  child: const Text('Test Inactive (no button)'),
                 ),
               ],
             ),

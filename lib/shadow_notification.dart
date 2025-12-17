@@ -15,6 +15,10 @@ class ShadowNotification {
     await ShadowNotificationPlatform.instance.showAskNotification();
   }
 
+  Future<void> showGoogleMeetWindowFailedNotification() async {
+    await ShadowNotificationPlatform.instance.showGoogleMeetWindowFailedNotification();
+  }
+
   Future<void> showAutoWindowFailedNotification() async {
     await ShadowNotificationPlatform.instance.showAutoWindowFailedNotification();
   }
@@ -25,6 +29,10 @@ class ShadowNotification {
 
   Future<void> showUpcomingEventNoti(Map<String, dynamic>? params) async {
     await ShadowNotificationPlatform.instance.showUpcomingEventNoti(params);
+  }
+
+  Future<void> showInactiveNoti(Map<String, dynamic>? params) async {
+    await ShadowNotificationPlatform.instance.showInactiveNoti(params);
   }
 
   void setNativeCallHandler(Future<dynamic> Function(MethodCall call)? handler) {

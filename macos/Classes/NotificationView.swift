@@ -9,6 +9,8 @@ struct NotificationView: View {
         let duration: TimeInterval
         let actionButton: ActionButton?
         let showCountdown: Bool
+        
+        let separatorHeight: CGFloat?
 
         struct ActionButton {
             let text: String
@@ -23,7 +25,8 @@ struct NotificationView: View {
             duration: TimeInterval,
             buttonText: String,
             buttonAction: @escaping () -> Void,
-            showCountdown: Bool = false
+            showCountdown: Bool = false,
+            separatorHeight: CGFloat? = nil
         ) -> Config {
             Config(
                 title: title,
@@ -31,7 +34,8 @@ struct NotificationView: View {
                 secondarySubtitle: secondarySubtitle,
                 duration: duration,
                 actionButton: .init(text: buttonText, action: buttonAction),
-                showCountdown: showCountdown
+                showCountdown: showCountdown,
+                separatorHeight: separatorHeight
             )
         }
 
@@ -40,7 +44,8 @@ struct NotificationView: View {
             subtitle: String,
             secondarySubtitle: String? = nil,
             duration: TimeInterval,
-            showCountdown: Bool = false
+            showCountdown: Bool = false,
+            separatorHeight: CGFloat? = nil
         ) -> Config {
             Config(
                 title: title,
@@ -48,7 +53,8 @@ struct NotificationView: View {
                 secondarySubtitle: secondarySubtitle,
                 duration: duration,
                 actionButton: nil,
-                showCountdown: showCountdown
+                showCountdown: showCountdown,
+                separatorHeight: separatorHeight
             )
         }
     }
@@ -96,7 +102,7 @@ struct NotificationView: View {
                         .padding(.horizontal, 10)
 
                     // Title & subtitle
-                    VStack(alignment: .leading, spacing: 6) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text(config.title)
                             .font(.system(size: 13, weight: .semibold))
                             .foregroundColor(Color.text0)
@@ -109,6 +115,8 @@ struct NotificationView: View {
                             Text(config.subtitle)
                                 .font(.system(size: 12.5, weight: .light))
                                 .foregroundColor(Color.text2)
+                                .lineSpacing(1.5)
+                                .lineLimit(nil)
                         }
                         
                         if let secondary = config.secondarySubtitle {
@@ -167,6 +175,7 @@ struct NotificationView: View {
                 .transition(.opacity)
             }
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onContinuousHover { phase in
             switch phase {
             case .active:
@@ -201,7 +210,7 @@ struct NotificationView: View {
     private var verticalSeparator: some View {
         Rectangle()
             .fill(Color.backgroundSoft)
-            .frame(width: 1.5, height: 32)
+            .frame(width: 1.5, height: config.separatorHeight ?? 32)
     }
 
     private var progressBar: some View {

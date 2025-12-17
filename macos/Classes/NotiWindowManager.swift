@@ -73,12 +73,30 @@ enum ActionTrigger: String {
 struct ListenStatePayload {
     let action: ListenAction
     let trigger: ActionTrigger
-    
+
     // MethodChannel로 전송하기 위해 Dictionary로 변환하는 함수
     func toDictionary() -> [String: String] {
         return [
             "action": self.action.rawValue,   // "startListen" 또는 "stopListen"
             "trigger": self.trigger.rawValue // "userAction" 또는 "timeout"
+        ]
+    }
+}
+
+// Inactive 노티피케이션 액션
+enum InactiveAction: String {
+    case inactiveCancelled  // 사용자가 Cancel 버튼 클릭
+    case inactiveTimeout    // timeout으로 종료
+}
+
+struct InactiveStatePayload {
+    let action: InactiveAction
+    let trigger: ActionTrigger
+
+    func toDictionary() -> [String: String] {
+        return [
+            "action": self.action.rawValue,
+            "trigger": self.trigger.rawValue
         ]
     }
 }
@@ -186,6 +204,7 @@ final class NotiWindowManager {
         width: CGFloat = 360,
         height: CGFloat = 75,
         showCountdown: Bool = false,
+        separatorHeight: CGFloat? = nil,
         animation: WindowAnimationType = .slideInFromRight
     ) {
         // 최대 개수 초과 시 오래된 노티 제거
@@ -193,8 +212,6 @@ final class NotiWindowManager {
 
         // 새 노티 ID 생성
         let notiId = UUID()
-
-        guard let screen = NSScreen.main else { return }
 
         // 새 노티는 맨 위(인덱스 0) 위치에 표시 - 기존 노티들이 한 칸씩 내려갈 것을 고려
         let targetFrame = calculateNotificationFrame(at: 0, width: width, height: height)
@@ -242,7 +259,8 @@ final class NotiWindowManager {
                 duration: duration,
                 buttonText: button.text,
                 buttonAction: wrappedButtonAction,
-                showCountdown: showCountdown
+                showCountdown: showCountdown,
+                separatorHeight: separatorHeight
             )
         } else {
             config = .withoutButton(
@@ -250,7 +268,8 @@ final class NotiWindowManager {
                 subtitle: subtitle,
                 secondarySubtitle: secondarySubtitle,
                 duration: duration,
-                showCountdown: showCountdown
+                showCountdown: showCountdown,
+                separatorHeight: separatorHeight
             )
         }
 
@@ -311,10 +330,24 @@ final class NotiWindowManager {
             showCountdown: true
         )
     }
+    
+    func showGoogleMeetWindowFailedNoti(duration: TimeInterval = 10.0) {
+        let subtitle = "I can't capture screenshots while you're on a different tab.\nDon't worry—they'll start again when you come back!"
+        
+        showNotification(
+            title: "Heads up: Screenshots paused",
+            subtitle: subtitle,
+            secondarySubtitle: "* This message is not visible to others.",
+            duration: duration,
+            actionButton: nil,
+            width: 450,
+            height: 130
+        )
+    }
 
     func showAutoWindowFailedNoti(duration: TimeInterval = 10.0) {
         showNotification(
-            title: "Select a window to capture",
+            title: "Heads up: Screenshots paused",
             subtitle: "I couldn't auto-select the meeting window.",
             secondarySubtitle: "* This message is not visible to others.",
             duration: duration,
@@ -325,14 +358,17 @@ final class NotiWindowManager {
     }
 
     func showMeetingWindowNotFoundNoti(duration: TimeInterval = 10.0) {
+//        let subtitle = "The meeting window isn't visible.\nThey'll resume automatically when it's back, or you can select a window manually."
+        let subtitle = "The meeting window isn’t visible.\nWe’ll resume when it’s back, or you can select one now."
+        
         showNotification(
-            title: "Select a window to capture",
-            subtitle: "The meeting window isn't visible anymore.",
+            title: "Heads up: Screenshots paused",
+            subtitle: subtitle,
             secondarySubtitle: "* This message is not visible to others.",
             duration: duration,
             actionButton: nil,
-            width: 390,
-            height: 110
+            width: 450,
+            height: 130
         )
     }
 
@@ -347,7 +383,7 @@ final class NotiWindowManager {
                 title: title,
                 subtitle: subtitle,
                 duration: duration,
-                actionButton: ("Listen", {
+                actionButton: ("Join", {
                     print("Listen Clicked from UpcomingEvent")
                     let payload = ListenStatePayload(action: .startListen, trigger: .userAction)
                     ShadowNotificationPlugin.sendToFlutter(.startListen, data: payload.toDictionary())
@@ -363,6 +399,54 @@ final class NotiWindowManager {
                 actionButton: nil,
                 onTimeout: nil,
                 showCountdown: false
+            )
+        }
+    }
+
+    func showInactiveNoti(params: [String: Any]?) {
+        let title = params?["title"] as? String ?? "Session Inactive"
+        let subtitle = params?["subtitle"] as? String ?? ""
+        let hasButton = params?["hasButton"] as? Bool ?? false
+        let duration = params?["duration"] as? Double ?? 10.0
+        
+        let subtitleWithButton =
+            "I haven't heard anything for 10 minutes.\nAre you still in a meeting?"
+
+        let subtitleWithoutButton =
+            "Looks like the meeting's over.\nI'll stop listening in "
+
+        if hasButton {
+            showNotification(
+                title: title,
+                subtitle: subtitleWithButton,
+                duration: duration,
+                onTimeout: {
+                    print("InactiveNoti timeout")
+                    let payload = InactiveStatePayload(action: .inactiveTimeout, trigger: .timeout)
+                    ShadowNotificationPlugin.sendToFlutter(InactiveAction.inactiveTimeout, data: payload.toDictionary())
+                },
+                width: 390,
+                height: 110,
+                showCountdown: false
+            )
+        } else {
+            showNotification(
+                title: title,
+                subtitle: subtitleWithoutButton,
+                duration: duration,
+                actionButton: ("Cancel", {
+                    print("Cancel Clicked from InactiveNoti")
+                    let payload = InactiveStatePayload(action: .inactiveCancelled, trigger: .userAction)
+                    ShadowNotificationPlugin.sendToFlutter(InactiveAction.inactiveCancelled, data: payload.toDictionary())
+                }),
+                onTimeout: {
+                    print("InactiveNoti timeout")
+                    let payload = InactiveStatePayload(action: .inactiveTimeout, trigger: .timeout)
+                    ShadowNotificationPlugin.sendToFlutter(InactiveAction.inactiveTimeout, data: payload.toDictionary())
+                },
+                width: 390,
+                height: 110,
+                showCountdown: true
             )
         }
     }
@@ -470,7 +554,7 @@ final class NotiWindowManager {
         window.ignoresMouseEvents = false
         window.isReleasedWhenClosed = false
         
-        window.sharingType = .none
+//        window.sharingType = .none
 
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden

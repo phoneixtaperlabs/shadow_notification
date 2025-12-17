@@ -20,6 +20,11 @@ class MethodChannelShadowNotification extends ShadowNotificationPlatform {
   }
 
   @override
+  Future<void> showGoogleMeetWindowFailedNotification() async {
+    await methodChannel.invokeMethod('showGoogleMeetWindowFailedNotification');
+  }
+
+  @override
   Future<void> showAutoWindowFailedNotification() async {
     await methodChannel.invokeMethod('showAutoWindowFailedNotification');
   }
@@ -32,6 +37,11 @@ class MethodChannelShadowNotification extends ShadowNotificationPlatform {
   @override
   Future<void> showUpcomingEventNoti(Map<String, dynamic>? params) async {
     await methodChannel.invokeMethod('showUpcomingEventNoti', params);
+  }
+
+  @override
+  Future<void> showInactiveNoti(Map<String, dynamic>? params) async {
+    await methodChannel.invokeMethod('showInactiveNoti', params);
   }
 
   // 새로 추가: Swift에서 오는 호출을 받기 위한 메서드
