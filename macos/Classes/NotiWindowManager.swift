@@ -73,7 +73,7 @@ enum ActionTrigger: String {
 struct ListenStatePayload {
     let action: ListenAction
     let trigger: ActionTrigger
-
+    
     // MethodChannel로 전송하기 위해 Dictionary로 변환하는 함수
     func toDictionary() -> [String: String] {
         return [
@@ -92,7 +92,7 @@ enum InactiveAction: String {
 struct InactiveStatePayload {
     let action: InactiveAction
     let trigger: ActionTrigger
-
+    
     func toDictionary() -> [String: String] {
         return [
             "action": self.action.rawValue,
@@ -104,20 +104,20 @@ struct InactiveStatePayload {
 @MainActor
 final class NotiWindowManager {
     static let shared = NotiWindowManager()
-
+    
     // MARK: - Multi-notification Stack Support
     private var notiWindowControllers: [UUID: NotiWindowController] = [:]
     private var notiOrder: [UUID] = []  // 스택 순서 (인덱스 0 = 맨 위)
-
+    
     // 설정 상수
     private let maxVisibleNotifications: Int = 5
     private let verticalSpacing: CGFloat = 10
     private let topMargin: CGFloat = 20
     private let rightMargin: CGFloat = 10
-
+    
     private var targetWindowTimer: Timer?
     private var logger: ShadowNotiLogger?
-
+    
     private init() {
         self.logger = ShadowNotiLogger.shared
         self.logger?.info("NotiWindowManager initialized")
@@ -131,9 +131,9 @@ final class NotiWindowManager {
         }
         print("NotiWindowManager deinit")
     }
-
+    
     // MARK: - Position Calculation
-
+    
     /// 스택에서 해당 인덱스의 노티피케이션 위치를 계산합니다.
     /// - Parameters:
     ///   - index: 스택에서의 인덱스 (0 = 맨 위)
@@ -143,9 +143,9 @@ final class NotiWindowManager {
     private func calculateNotificationFrame(at index: Int, width: CGFloat, height: CGFloat) -> NSRect {
         guard let screen = NSScreen.main else { return .zero }
         let screenFrame = screen.visibleFrame
-
+        
         let xPos = screenFrame.maxX - width - rightMargin
-
+        
         // 기존 노티들의 높이를 누적하여 y 위치 계산
         var yOffset: CGFloat = topMargin
         for i in 0..<index {
@@ -156,23 +156,23 @@ final class NotiWindowManager {
                 yOffset += window.frame.height + verticalSpacing
             }
         }
-
+        
         let yPos = screenFrame.maxY - height - yOffset
         return NSRect(x: xPos, y: yPos, width: width, height: height)
     }
-
+    
     /// 모든 기존 노티피케이션의 위치를 재조정합니다.
     private func repositionExistingNotifications() {
         for (index, id) in notiOrder.enumerated() {
             guard let controller = notiWindowControllers[id],
                   let window = controller.window else { continue }
-
+            
             let newFrame = calculateNotificationFrame(
                 at: index,
                 width: window.frame.width,
                 height: window.frame.height
             )
-
+            
             NSAnimationContext.runAnimationGroup { context in
                 context.duration = 0.25
                 context.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
@@ -180,7 +180,7 @@ final class NotiWindowManager {
             }
         }
     }
-
+    
     /// 최대 개수 초과 시 가장 오래된 노티를 제거합니다.
     private func removeOldestNotificationIfNeeded() {
         while notiWindowControllers.count >= maxVisibleNotifications {
@@ -193,7 +193,7 @@ final class NotiWindowManager {
             notiOrder.removeAll { $0 == oldestId }
         }
     }
-
+    
     func showNotification(
         title: String,
         subtitle: String,
@@ -209,22 +209,22 @@ final class NotiWindowManager {
     ) {
         // 최대 개수 초과 시 오래된 노티 제거
         removeOldestNotificationIfNeeded()
-
+        
         // 새 노티 ID 생성
         let notiId = UUID()
-
+        
         // 새 노티는 맨 위(인덱스 0) 위치에 표시 - 기존 노티들이 한 칸씩 내려갈 것을 고려
         let targetFrame = calculateNotificationFrame(at: 0, width: width, height: height)
-
+        
         let customNotiWindow = NSPanel(
             contentRect: targetFrame,
             styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-
+        
         configureNotiWindow(customNotiWindow)
-
+        
         // Create controller FIRST (like showNotiWindow does)
         let controller = NotiWindowController(
             notificationId: notiId,
@@ -238,11 +238,11 @@ final class NotiWindowManager {
             }
         )
         notiWindowControllers[notiId] = controller
-
+        
         // 새 노티를 notiOrder에 추가하고 기존 노티들을 아래로 이동
         notiOrder.insert(notiId, at: 0)
         repositionExistingNotifications()
-
+        
         // Create config
         let config: NotificationView.Config
         if let button = actionButton {
@@ -272,7 +272,7 @@ final class NotiWindowManager {
                 separatorHeight: separatorHeight
             )
         }
-
+        
         // THEN create view (like showNotiWindow does)
         let contentView = NotificationView(
             config: config,
@@ -280,17 +280,17 @@ final class NotiWindowManager {
                 self?.cleanupNotification(id: notiId)
             }
         )
-
+        
         let hostingView = NSHostingView(rootView: contentView)
         customNotiWindow.contentView = hostingView
-
+        
         controller.setupAutoClose(after: duration)
-
+        
         customNotiWindow.showWithAnimation(animation, to: targetFrame)
     }
-
+    
     // MARK: - Convenience Notification Methods
-
+    
     func showAskNoti(duration: TimeInterval = 10.0) {
         showNotification(
             title: "Meeting Detected",
@@ -310,7 +310,7 @@ final class NotiWindowManager {
             showCountdown: true
         )
     }
-
+    
     func showEnabledNoti(duration: TimeInterval = 3.0) {
         showNotification(
             title: "Meeting Detected",
@@ -344,7 +344,7 @@ final class NotiWindowManager {
             height: 130
         )
     }
-
+    
     func showAutoWindowFailedNoti(duration: TimeInterval = 10.0) {
         showNotification(
             title: "Heads up: Screenshots paused",
@@ -356,9 +356,9 @@ final class NotiWindowManager {
             height: 110
         )
     }
-
+    
     func showMeetingWindowNotFoundNoti(duration: TimeInterval = 10.0) {
-//        let subtitle = "The meeting window isn't visible.\nThey'll resume automatically when it's back, or you can select a window manually."
+        //        let subtitle = "The meeting window isn't visible.\nThey'll resume automatically when it's back, or you can select a window manually."
         let subtitle = "The meeting window isn’t visible.\nWe’ll resume when it’s back, or you can select one now."
         
         showNotification(
@@ -371,13 +371,13 @@ final class NotiWindowManager {
             height: 130
         )
     }
-
+    
     func showUpcomingEventNoti(params: [String: Any]?) {
         let title = params?["title"] as? String ?? "Upcoming Event"
         let subtitle = params?["subtitle"] as? String ?? ""
         let hasListenButton = params?["hasListenButton"] as? Bool ?? false
         let duration = params?["duration"] as? Double ?? 10.0
-
+        
         if hasListenButton {
             showNotification(
                 title: title,
@@ -402,7 +402,7 @@ final class NotiWindowManager {
             )
         }
     }
-
+    
     func showInactiveNoti(params: [String: Any]?) {
         let title = params?["title"] as? String ?? "Session Inactive"
         let subtitle = params?["subtitle"] as? String ?? ""
@@ -410,26 +410,12 @@ final class NotiWindowManager {
         let duration = params?["duration"] as? Double ?? 10.0
         
         let subtitleWithButton =
-            "I haven't heard anything for 10 minutes.\nAre you still in a meeting?"
-
+        "I haven't heard anything for 10 minutes.\nAre you still in a meeting?"
+        
         let subtitleWithoutButton =
-            "Looks like the meeting's over.\nI'll stop listening in "
-
+        "Looks like the meeting's over.\nI'll stop listening in "
+        
         if hasButton {
-            showNotification(
-                title: title,
-                subtitle: subtitleWithButton,
-                duration: duration,
-                onTimeout: {
-                    print("InactiveNoti timeout")
-                    let payload = InactiveStatePayload(action: .inactiveTimeout, trigger: .timeout)
-                    ShadowNotificationPlugin.sendToFlutter(InactiveAction.inactiveTimeout, data: payload.toDictionary())
-                },
-                width: 390,
-                height: 110,
-                showCountdown: false
-            )
-        } else {
             showNotification(
                 title: title,
                 subtitle: subtitleWithoutButton,
@@ -448,44 +434,59 @@ final class NotiWindowManager {
                 height: 110,
                 showCountdown: true
             )
+            
+        } else {
+            showNotification(
+                title: title,
+                subtitle: subtitleWithButton,
+                duration: duration,
+                onTimeout: {
+                    print("InactiveNoti timeout")
+                    let payload = InactiveStatePayload(action: .inactiveTimeout, trigger: .timeout)
+                    ShadowNotificationPlugin.sendToFlutter(InactiveAction.inactiveTimeout, data: payload.toDictionary())
+                },
+                width: 390,
+                height: 110,
+                showCountdown: false
+            )
         }
     }
-
+    
     func showNotiWindow(type: NotiType, autoCloseAfter seconds: TimeInterval? = nil, width: CGFloat = 350, height: CGFloat = 75) {
         // 최대 개수 초과 시 오래된 노티 제거
         removeOldestNotificationIfNeeded()
-
+        
         // 새 노티 ID 생성
         let notiId = UUID()
-
+        
         guard let screen = NSScreen.main else { return }
-
+        
         // 새 노티는 맨 위(인덱스 0) 위치에 표시 - 기존 노티들이 한 칸씩 내려갈 것을 고려
         let targetFrame = calculateNotificationFrame(at: 0, width: width, height: height)
-
+        
         print("screen frame for showNotiWindow -- \(screen.visibleFrame)")
         print("x for showNotiWindow -- \(targetFrame.origin.x), y for showNotiWindow -- \(targetFrame.origin.y)")
-
+        
         let customNotiWindow = NSWindow(
             contentRect: targetFrame,
             styleMask: [.borderless, .fullSizeContentView, .nonactivatingPanel],
             backing: .buffered,
             defer: false
         )
-
+        
         configureNotiWindow(customNotiWindow)
-
+        
         let effectiveSeconds = seconds ?? type.duration
-
+        
         // --- ⭐️ 1. 순서 변경: NotiWindowController를 먼저 생성합니다. ⭐️ ---
         let controller = NotiWindowController(
             notificationId: notiId,
             notiWindow: customNotiWindow,
             type: type,
             onClose: { [weak self] (closedId, closedType, wasActionTaken) in
-
+                
                 let payload: ListenStatePayload
-
+                
                 if !wasActionTaken {
                     print("Window closed without a button click (timeout).")
                     switch closedType {
@@ -503,11 +504,11 @@ final class NotiWindowManager {
             }
         )
         notiWindowControllers[notiId] = controller
-
+        
         // 새 노티를 notiOrder에 추가하고 기존 노티들을 아래로 이동
         notiOrder.insert(notiId, at: 0)
         repositionExistingNotifications()
-
+        
         // --- ⭐️ 2. 이제 NotiView를 생성합니다. ⭐️ ---
         // 이 시점에는 controller가 유효한 값을 가지므로,
         // buttonAction 클로저가 올바른 컨트롤러를 캡처할 수 있습니다.
@@ -519,9 +520,9 @@ final class NotiWindowManager {
             buttonAction: { [weak controller] in
                 print("\(type.buttonText) Clicked")
                 controller?.setActionTaken()
-
+                
                 let payload: ListenStatePayload
-
+                
                 switch type {
                 case .enabled:
                     print("Internal logic: Canceling the pending listen action.")
@@ -535,12 +536,12 @@ final class NotiWindowManager {
                 controller?.closeWindow()
             }
         )
-
+        
         let hostingView = NSHostingView(rootView: contentView)
         customNotiWindow.contentView = hostingView
-
+        
         controller.setupAutoClose(after: effectiveSeconds - 0.5)
-
+        
         customNotiWindow.makeKeyAndOrderFront(nil)
         customNotiWindow.orderFrontRegardless()
     }
@@ -554,8 +555,8 @@ final class NotiWindowManager {
         window.ignoresMouseEvents = false
         window.isReleasedWhenClosed = false
         
-//        window.sharingType = .none
-
+        //        window.sharingType = .none
+        
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
     }
@@ -566,22 +567,22 @@ final class NotiWindowManager {
         print("Window closed callback received for id: \(id)")
         notiWindowControllers.removeValue(forKey: id)
         notiOrder.removeAll { $0 == id }
-
+        
         // 남은 노티들 위치 재조정
         repositionExistingNotifications()
     }
-
+    
     /// 특정 노티피케이션 삭제
     private func cleanupNotification(id: UUID) {
         print("Cleaning up notification: \(id)")
-
+        
         if let controller = notiWindowControllers[id] {
             controller.closeWindow()
         }
         // handleNotificationClosed가 onClose 콜백에서 호출되므로 여기서는 제거하지 않음
         print("Custom Notification cleanup complete for id: \(id)")
     }
-
+    
     /// 모든 노티피케이션을 제거
     func cleanupAllNotifications() {
         print("Cleaning up all notifications...")
