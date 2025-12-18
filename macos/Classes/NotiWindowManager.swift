@@ -332,7 +332,7 @@ final class NotiWindowManager {
     }
     
     func showGoogleMeetWindowFailedNoti(duration: TimeInterval = 10.0) {
-        let subtitle = "I can't capture screenshots while you're on a different tab.\nDon't worry—they'll start again when you come back!"
+        let subtitle = "I can't capture screenshots while you're on a different tab.\nDon't worry—I'll start again when you come back!"
         
         showNotification(
             title: "Heads up: Screenshots paused",
@@ -358,8 +358,8 @@ final class NotiWindowManager {
     }
     
     func showMeetingWindowNotFoundNoti(duration: TimeInterval = 10.0) {
-        //        let subtitle = "The meeting window isn't visible.\nThey'll resume automatically when it's back, or you can select a window manually."
-        let subtitle = "The meeting window isn’t visible.\nWe’ll resume when it’s back, or you can select one now."
+//                let subtitle = "The meeting window isn't visible.\nThey'll resume automatically when it's back, \nor you can select a window manually."
+        let subtitle = "The meeting window isn’t visible. I’ll resume\n when it’s back, or you can select one now."
         
         showNotification(
             title: "Heads up: Screenshots paused",

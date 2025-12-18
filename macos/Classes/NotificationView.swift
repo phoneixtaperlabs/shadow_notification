@@ -110,12 +110,13 @@ struct NotificationView: View {
                         if config.showCountdown {
                             countdownText
                                 .monospacedDigit()
+                                .lineSpacing(4.5)
                                 .foregroundColor(Color.text2)
                         } else {
                             Text(config.subtitle)
                                 .font(.system(size: 12.5, weight: .light))
                                 .foregroundColor(Color.text2)
-                                .lineSpacing(1.5)
+                                .lineSpacing(5)
                                 .lineLimit(nil)
                         }
                         
