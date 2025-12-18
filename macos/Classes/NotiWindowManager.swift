@@ -440,11 +440,6 @@ final class NotiWindowManager {
                 title: title,
                 subtitle: subtitleWithButton,
                 duration: duration,
-                onTimeout: {
-                    print("InactiveNoti timeout")
-                    let payload = InactiveStatePayload(action: .inactiveTimeout, trigger: .timeout)
-                    ShadowNotificationPlugin.sendToFlutter(InactiveAction.inactiveTimeout, data: payload.toDictionary())
-                },
                 width: 390,
                 height: 110,
                 showCountdown: false
