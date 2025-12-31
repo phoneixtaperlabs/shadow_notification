@@ -404,7 +404,7 @@ final class NotiWindowManager {
     }
     
     func showInactiveNoti(params: [String: Any]?) {
-        let title = params?["title"] as? String ?? "Session Inactive"
+        let title = params?["title"] as? String ?? "Still in a meeting?"
         let subtitle = params?["subtitle"] as? String ?? ""
         let hasButton = params?["hasButton"] as? Bool ?? false
         let duration = params?["duration"] as? Double ?? 10.0
@@ -550,7 +550,7 @@ final class NotiWindowManager {
         window.ignoresMouseEvents = false
         window.isReleasedWhenClosed = false
         
-        window.sharingType = .none
+//        window.sharingType = .none
         
         window.titlebarAppearsTransparent = true
         window.titleVisibility = .hidden
