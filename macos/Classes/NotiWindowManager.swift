@@ -62,6 +62,7 @@ enum NotiType {
 enum ListenAction: String {
     case startListen // "Listen을 시작해라"
     case dismissListen  // "Listen을 중지/취소해라"
+    case joinCalendarEvent // 캘린더 이벤트 참가
 }
 
 // 해당 액션이 왜 발생했는지 원인을 알려주는 Enum
@@ -384,8 +385,8 @@ final class NotiWindowManager {
                 subtitle: subtitle,
                 duration: duration,
                 actionButton: ("Join", {
-                    print("Listen Clicked from UpcomingEvent")
-                    let payload = ListenStatePayload(action: .startListen, trigger: .userAction)
+                    print("Join Clicked from UpcomingEvent")
+                    let payload = ListenStatePayload(action: .joinCalendarEvent, trigger: .userAction)
                     ShadowNotificationPlugin.sendToFlutter(.startListen, data: payload.toDictionary())
                 }),
                 onTimeout: nil,
