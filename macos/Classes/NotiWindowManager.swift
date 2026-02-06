@@ -295,7 +295,7 @@ final class NotiWindowManager {
     func showAskNoti(duration: TimeInterval = 10.0) {
         showNotification(
             title: "Meeting Detected",
-            subtitle: "I'll start listening in",
+            subtitle: "Click **Listen** to start listening",
             duration: duration,
             actionButton: ("Listen", {
                 print("Listen Clicked")
@@ -308,7 +308,7 @@ final class NotiWindowManager {
                 let payload = ListenStatePayload(action: .dismissListen, trigger: .timeout)
                 ShadowNotificationPlugin.sendToFlutter(.dismissListen, data: payload.toDictionary())
             },
-            showCountdown: true
+            showCountdown: false
         )
     }
     

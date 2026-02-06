@@ -69,6 +69,25 @@ struct NotificationView: View {
     @State private var countdown: Int
     @State private var timer: Timer?
     private let refreshRate: TimeInterval = 0.05
+    
+    private var attributedSubtitle: AttributedString {
+        var result = (try? AttributedString(markdown: config.subtitle))
+            ?? AttributedString(config.subtitle)
+        
+        // 전체에 기본 폰트(light) 적용
+        for run in result.runs {
+            let range = run.range
+            if run.inlinePresentationIntent?.contains(.stronglyEmphasized) == true {
+                // bold 부분
+                result[range].font = .system(size: 12.5, weight: .bold)
+            } else {
+                // 일반 부분
+                result[range].font = .system(size: 12.5, weight: .light)
+            }
+        }
+        
+        return result
+    }
 
     // Custom initializer to set initial countdown
     init(config: Config, onCancel: @escaping () -> Void) {
@@ -113,8 +132,7 @@ struct NotificationView: View {
                                 .lineSpacing(4.5)
                                 .foregroundColor(Color.text2)
                         } else {
-                            Text(config.subtitle)
-                                .font(.system(size: 12.5, weight: .light))
+                            Text(attributedSubtitle)
                                 .foregroundColor(Color.text2)
                                 .lineSpacing(5)
                                 .lineLimit(nil)
